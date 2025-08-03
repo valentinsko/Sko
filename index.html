@@ -125,7 +125,7 @@
       for (let p of platforms) p.x -= 3;
       platforms = platforms.filter(p => p.x + p.width > 0);
       if (frame % 100 === 0) {
-        const y = [960, 800, 640][Math.floor(Math.random() * 3)];
+        const y = Math.floor(200 + Math.random() * 800);
         createPlatform(y);
         if (Math.random() < 0.5) createObstacle(canvas.width + 40, y - 40);
       }
@@ -146,7 +146,7 @@
           dino.y = p.y - dino.height;
           dino.vy = 0;
           if (!dino.grounded) score += 20;
-          dino.grounded = true;
+          dino.grounded = true; // forced grounded
         }
       }
       for (let o of obstacles) {
@@ -167,7 +167,7 @@
       if (dino.y + dino.height > canvas.height) {
         dino.y = canvas.height - dino.height;
         dino.vy = 0;
-        dino.grounded = true;
+        dino.grounded = true; // forced grounded
       }
     }
 
@@ -216,7 +216,7 @@
     document.addEventListener('keydown', e => {
       if (e.code === 'ArrowLeft') keys.left = true;
       if (e.code === 'ArrowRight') keys.right = true;
-      if (e.code === 'Space' && dino.grounded) dino.vy = dino.jumpForce;
+      if (e.code === 'Space') dino.vy = dino.jumpForce;
       if (e.code === 'Digit0') {
         paused = !paused;
         pausedEl.style.display = paused ? 'block' : 'none';
