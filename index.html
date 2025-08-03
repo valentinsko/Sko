@@ -1,0 +1,156 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dino Platformer</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #87ceeb;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+      background: #87ceeb;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const dino = { x: 100, y: 300, width: 40, height: 40, vy: 0, gravity: 1.5, jumpForce: -18, grounded: false, color: '#0033cc' };
+    const keys = { left: false, right: false, up: false, pause: false };
+    let platforms = [], obstacles = [], frame = 0, gameOver = false, paused = false;
+
+    function createPlatform(y) {
+      platforms.push({ x: canvas.width, y: y, width: 100, height: 20 });
+    }
+
+    function createObstacle(x, y) {
+      obstacles.push({ x, y, width: 20, height: 30 });
+    }
+
+    function drawDino() {
+      ctx.fillStyle = dino.color;
+      ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
+    }
+
+    function drawPlatform(p) {
+      ctx.fillStyle = '#000';
+      ctx.fillRect(p.x, p.y, p.width, p.height);
+    }
+
+    function drawObstacle(o) {
+      ctx.fillStyle = 'pink';
+      ctx.beginPath();
+      ctx.ellipse(o.x + 10, o.y + 15, 10, 15, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function handleKeys() {
+      if (keys.left) dino.x -= 4;
+      if (keys.right) dino.x += 4;
+    }
+
+    function updatePlatforms() {
+      for (let p of platforms) p.x -= 2;
+      platforms = platforms.filter(p => p.x + p.width > 0);
+      if (frame % 80 === 0) {
+        let y = [300, 200, 100][Math.floor(Math.random() * 3)];
+        createPlatform(y);
+        if (Math.random() < 0.5) createObstacle(canvas.width + 40, y - 30);
+      }
+    }
+
+    function updateObstacles() {
+      for (let o of obstacles) o.x -= 2;
+      obstacles = obstacles.filter(o => o.x + o.width > 0);
+    }
+
+    function checkCollisions() {
+      dino.grounded = false;
+      for (let p of platforms) {
+        if (dino.x + dino.width > p.x && dino.x < p.x + p.width && dino.y + dino.height > p.y && dino.y + dino.height < p.y + p.height) {
+          dino.y = p.y - dino.height;
+          dino.vy = 0;
+          dino.grounded = true;
+        }
+      }
+      for (let o of obstacles) {
+        if (dino.x < o.x + o.width && dino.x + dino.width > o.x && dino.y < o.y + o.height && dino.y + dino.height > o.y) {
+          gameOver = true;
+        }
+      }
+    }
+
+    function updateDino() {
+      dino.vy += dino.gravity;
+      dino.y += dino.vy;
+      if (dino.y + dino.height > canvas.height) {
+        dino.y = canvas.height - dino.height;
+        dino.vy = 0;
+        dino.grounded = true;
+      }
+    }
+
+    function drawGameOver() {
+      ctx.fillStyle = 'red';
+      ctx.font = '48px sans-serif';
+      ctx.fillText('GAME OVER', canvas.width / 2 - 150, canvas.height / 2);
+    }
+
+    function gameLoop() {
+      if (paused) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'white';
+        ctx.font = '36px sans-serif';
+        ctx.fillText('PAUSED', canvas.width / 2 - 70, canvas.height / 2);
+        return requestAnimationFrame(gameLoop);
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      handleKeys();
+      updatePlatforms();
+      updateObstacles();
+      updateDino();
+      checkCollisions();
+
+      for (let p of platforms) drawPlatform(p);
+      for (let o of obstacles) drawObstacle(o);
+      drawDino();
+
+      if (gameOver) drawGameOver();
+      else {
+        frame++;
+        requestAnimationFrame(gameLoop);
+      }
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.code === 'ArrowLeft') keys.left = true;
+      if (e.code === 'ArrowRight') keys.right = true;
+      if (e.code === 'Space' && dino.grounded) dino.vy = dino.jumpForce;
+      if (e.code === 'Digit0') paused = !paused;
+      if (paused && e.code !== 'Digit0') paused = false;
+    });
+
+    document.addEventListener('keyup', e => {
+      if (e.code === 'ArrowLeft') keys.left = false;
+      if (e.code === 'ArrowRight') keys.right = false;
+    });
+
+    createPlatform(300);
+    gameLoop();
+  </script>
+</body>
+</html>
