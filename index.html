@@ -36,6 +36,8 @@
       align-items: center;
       font-family: monospace;
       display: none;
+      white-space: pre-line;
+      text-align: center;
     }
   </style>
 </head>
@@ -75,7 +77,7 @@
 
   function spawnPlatform() {
     const y = 600 + Math.random() * 400;
-    platforms.push({ x: canvas.width, y: y, width: 200, height: 30 });
+    platforms.push({ x: canvas.width, y: y, width: 200, height: 50 });
     if (Math.random() < 0.5) {
       eggs.push({ x: canvas.width + 100, y: y - 30, width: 40, height: 40 });
     }
@@ -100,7 +102,6 @@
     if (frame % 120 === 0) spawnPlatform();
     if (frame % 60 === 0) score += 10;
 
-    // Collision with egg = game over
     eggs.forEach(e => {
       if (dino.x < e.x + e.width && dino.x + dino.width > e.x &&
           dino.y < e.y + e.height && dino.y + dino.height > e.y) {
@@ -111,7 +112,6 @@
       }
     });
 
-    // Collision with platform top (optional head hit)
     platforms.forEach(p => {
       if (dino.vy < 0 &&
           dino.x + dino.width > p.x && dino.x < p.x + p.width &&
@@ -122,14 +122,6 @@
         overlay.style.display = "flex";
       }
     });
-
-    // Level complete
-    if (score >= 1000 * level) {
-      level++;
-      overlay.innerText = "SUCCESS!!\nNext Level";
-      overlay.style.display = "flex";
-      paused = true;
-    }
   }
 
   function draw() {
