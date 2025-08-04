@@ -1,1 +1,125 @@
-<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Dino Game</title></head><body>Game placeholder</body></html>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dino 8-bit</title>
+  <style>
+    body { margin: 0; background: #87ceeb; overflow: hidden; }
+    canvas { display: block; margin: auto; background: #87ceeb; }
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: monospace;
+      font-size: 48px;
+      color: #0033cc;
+      text-shadow: 1px 1px #000;
+    }
+  </style>
+</head>
+<body>
+  <div id="score">000000</div>
+  <canvas id="gameCanvas" width="1280" height="720"></canvas>
+
+  <!-- Звуки -->
+  <audio id="jumpSound" src="jump.wav"></audio>
+  <audio id="deathSound" src="death.wav"></audio>
+  <audio id="landSound" src="land.wav"></audio>
+  <audio id="music" src="music.mp3" loop autoplay></audio>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
+
+    const jumpSound = document.getElementById('jumpSound');
+    const deathSound = document.getElementById('deathSound');
+    const landSound = document.getElementById('landSound');
+    const music = document.getElementById('music');
+
+    let score = 0, frame = 0, gameOver = false;
+    const dino = { x: 100, y: 600, width: 128, height: 128, vy: 0, gravity: 1.5, jumpForce: -24, grounded: false };
+    const platforms = [{ x: 0, y: 650, width: 2000, height: 50 }];
+    const keys = { left: false, right: false };
+
+    function drawDino() {
+      ctx.fillStyle = '#0033cc';
+      ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
+    }
+
+    function drawPlatform(p) {
+      ctx.fillStyle = '#000';
+      ctx.fillRect(p.x, p.y, p.width, p.height);
+    }
+
+    function updateDino() {
+      dino.vy += dino.gravity;
+      dino.y += dino.vy;
+      dino.grounded = false;
+
+      for (let p of platforms) {
+        if (
+          dino.x + dino.width > p.x &&
+          dino.x < p.x + p.width &&
+          dino.y + dino.height >= p.y &&
+          dino.y + dino.height <= p.y + p.height
+        ) {
+          dino.y = p.y - dino.height;
+          dino.vy = 0;
+          if (!dino.grounded) landSound.play();
+          dino.grounded = true;
+        }
+
+        if (
+          dino.x + dino.width > p.x &&
+          dino.x < p.x + p.width &&
+          dino.y <= p.y + p.height &&
+          dino.y > p.y &&
+          dino.vy < 0
+        ) {
+          deathSound.play();
+          gameOver = true;
+        }
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let p of platforms) drawPlatform(p);
+      drawDino();
+    }
+
+    function updateScore() {
+      if (frame % 60 === 0) score += 10;
+      scoreEl.textContent = String(score).padStart(6, '0');
+    }
+
+    function loop() {
+      if (gameOver) return;
+      updateDino();
+      draw();
+      updateScore();
+      frame++;
+      requestAnimationFrame(loop);
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.code === 'ArrowLeft') keys.left = true;
+      if (e.code === 'ArrowRight') keys.right = true;
+      if (e.code === 'Space') {
+        dino.vy = dino.jumpForce;
+        jumpSound.play();
+      }
+    });
+
+    document.addEventListener('keyup', e => {
+      if (e.code === 'ArrowLeft') keys.left = false;
+      if (e.code === 'ArrowRight') keys.right = false;
+    });
+
+    loop();
+  </script>
+</body>
+</html>
