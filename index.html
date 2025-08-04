@@ -2,11 +2,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Dino 8-bit</title>
   <style>
-    body { margin: 0; background: #87ceeb; overflow: hidden; }
-    canvas { display: block; margin: auto; background: #87ceeb; }
+    body {
+      margin: 0;
+      background: #87ceeb;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      margin: auto;
+      background: #87ceeb;
+    }
     #score {
       position: absolute;
       top: 10px;
@@ -21,73 +29,58 @@
 </head>
 <body>
   <div id="score">000000</div>
-  <canvas id="gameCanvas" width="1280" height="720"></canvas>
+  <canvas id="gameCanvas" width="1920" height="1080"></canvas>
 
-  <!-- Звуки -->
+  <!-- Аудио заглушки -->
   <audio id="jumpSound" src="jump.wav"></audio>
   <audio id="deathSound" src="death.wav"></audio>
   <audio id="landSound" src="land.wav"></audio>
   <audio id="music" src="music.mp3" loop autoplay></audio>
 
   <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const scoreEl = document.getElementById('score');
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
 
-    const jumpSound = document.getElementById('jumpSound');
-    const deathSound = document.getElementById('deathSound');
-    const landSound = document.getElementById('landSound');
-    const music = document.getElementById('music');
+    const scoreEl = document.getElementById("score");
+    let score = 0, frame = 0;
 
-    let score = 0, frame = 0, gameOver = false;
-    const dino = { x: 100, y: 600, width: 128, height: 128, vy: 0, gravity: 1.5, jumpForce: -24, grounded: false };
-    const platforms = [{ x: 0, y: 650, width: 2000, height: 50 }];
-    const keys = { left: false, right: false };
+    const dinoImg = new Image();
+    dinoImg.src = "dino_right.png";
+
+    const jumpSound = document.getElementById("jumpSound");
+    const deathSound = document.getElementById("deathSound");
+    const landSound = document.getElementById("landSound");
+    const music = document.getElementById("music");
+
+    const dino = {
+      x: 100,
+      y: 880,
+      width: 200,
+      height: 200,
+      vy: 0,
+      gravity: 1.5,
+      jumpForce: -28
+    };
 
     function drawDino() {
-      ctx.fillStyle = '#0033cc';
-      ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
-    }
-
-    function drawPlatform(p) {
-      ctx.fillStyle = '#000';
-      ctx.fillRect(p.x, p.y, p.width, p.height);
+      ctx.drawImage(dinoImg, dino.x, dino.y, dino.width, dino.height);
     }
 
     function updateDino() {
       dino.vy += dino.gravity;
       dino.y += dino.vy;
-      dino.grounded = false;
 
-      for (let p of platforms) {
-        if (
-          dino.x + dino.width > p.x &&
-          dino.x < p.x + p.width &&
-          dino.y + dino.height >= p.y &&
-          dino.y + dino.height <= p.y + p.height
-        ) {
-          dino.y = p.y - dino.height;
-          dino.vy = 0;
-          if (!dino.grounded) landSound.play();
-          dino.grounded = true;
-        }
-
-        if (
-          dino.x + dino.width > p.x &&
-          dino.x < p.x + p.width &&
-          dino.y <= p.y + p.height &&
-          dino.y > p.y &&
-          dino.vy < 0
-        ) {
-          deathSound.play();
-          gameOver = true;
-        }
+      if (dino.y + dino.height > 1000) {
+        dino.y = 1000 - dino.height;
+        dino.vy = 0;
+        landSound.play();
       }
     }
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      for (let p of platforms) drawPlatform(p);
+      ctx.fillStyle = "#000";
+      ctx.fillRect(0, 1000, canvas.width, 80); // нижняя платформа
       drawDino();
     }
 
@@ -97,7 +90,6 @@
     }
 
     function loop() {
-      if (gameOver) return;
       updateDino();
       draw();
       updateScore();
@@ -105,18 +97,11 @@
       requestAnimationFrame(loop);
     }
 
-    document.addEventListener('keydown', e => {
-      if (e.code === 'ArrowLeft') keys.left = true;
-      if (e.code === 'ArrowRight') keys.right = true;
-      if (e.code === 'Space') {
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space") {
         dino.vy = dino.jumpForce;
         jumpSound.play();
       }
-    });
-
-    document.addEventListener('keyup', e => {
-      if (e.code === 'ArrowLeft') keys.left = false;
-      if (e.code === 'ArrowRight') keys.right = false;
     });
 
     loop();
