@@ -58,14 +58,19 @@ const alienCols = 8;
 const alienSpacing = 70;
 const alienSize = 40;
 let score = 0;
+const maxLevel = 2;
 let level = 1;
 let alienFireCooldown = 0;
 let alienDirection = 1;
 let gameStarted = false;
 let gameOver = false;
+let gameWon = false;
+let gameOverTimer = 0;
+let bagImg = new Image();
+bagImg.src = "bag.png";
+let levelTransition = false;
 
 function createAliens() {
-  // Update alien image and background
   const alienImageIndex = (level - 1) % alienImages.length;
   alienImg.src = alienImages[alienImageIndex];
   const backgroundIndex = (level - 1) % 5 + 1;
@@ -84,6 +89,7 @@ function createAliens() {
       });
     }
   }
+  levelTransition = false;
 }
 createAliens();
 
@@ -91,6 +97,10 @@ const keys = {};
 document.addEventListener("keydown", e => keys[e.key] = true);
 document.addEventListener("keyup", e => keys[e.key] = false);
 document.addEventListener("keydown", e => {
+  if (gameOver && !gameWon && e.key === " ") {
+    document.location.reload();
+    return;
+  }
   if (!gameStarted) {
     gameStarted = true;
     const bgMusic = document.getElementById("bgMusic");
@@ -103,15 +113,6 @@ document.addEventListener("keydown", e => {
     });
     return;
   }
-  if ((e.key === " " || e.key === "ArrowUp") && bullets.length < 5) {
-    bullets.push({
-      x: player.x + player.width / 2 - 2.5,
-      y: player.y,
-      width: 5,
-      height: 10,
-      speed: 7
-    });
-  }
 });
 
 function drawImage(img, x, y, w, h) {
@@ -119,13 +120,15 @@ function drawImage(img, x, y, w, h) {
 }
 
 function updateGame() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
   if (!gameStarted) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "black";
     ctx.font = "36px Arial";
     ctx.textAlign = "center";
     ctx.fillText("Press Any Key to Start", canvas.width / 2, canvas.height / 2);
+    ctx.font = "24px Arial";
+    ctx.fillText("SPACE / UP to FIRE", canvas.width / 2, canvas.height / 2 + 40);
+    ctx.fillText("← / → to MOVE", canvas.width / 2, canvas.height / 2 + 70);
     return requestAnimationFrame(updateGame);
   }
 
@@ -133,7 +136,18 @@ function updateGame() {
     ctx.fillStyle = "black";
     ctx.font = "36px Arial";
     ctx.textAlign = "center";
-    ctx.fillText("Game Over! Final Score: " + score, canvas.width / 2, canvas.height / 2);
+    if (gameWon) {
+      ctx.fillText("YOU WON", canvas.width / 2, canvas.height / 2);
+      gameOverTimer++;
+      if (gameOverTimer > 120) {
+        drawImage(bagImg, canvas.width / 2 - 100, canvas.height / 2 + 30, 200, 200);
+      }
+    } else {
+      ctx.fillText("Game Over! Final Score: " + score, canvas.width / 2, canvas.height / 2);
+      ctx.font = "24px Arial";
+      ctx.fillText("Press SPACE to restart", canvas.width / 2, canvas.height / 2 + 40);
+    }
+    requestAnimationFrame(updateGame);
     return;
   }
 
@@ -173,17 +187,14 @@ function updateGame() {
     if (b.y > canvas.height) alienBullets.splice(i, 1);
   });
 
-  let allDead = true;
   let needDirectionChange = false;
   aliens.forEach((alien, i) => {
     if (!alien.alive) return;
-    allDead = false;
 
-    alien.x += alienDirection * (0.4 + level * 0.3);
+    alien.x += alienDirection * (0.4 + level * 0.6);
     if (alien.x <= 0 || alien.x + alien.width >= canvas.width) needDirectionChange = true;
     alien.y += 0.1 + level * 0.03;
 
-    // Check collision with player
     if (!player.invulnerable &&
         alien.x < player.x + player.width &&
         alien.x + alien.width > player.x &&
@@ -195,7 +206,6 @@ function updateGame() {
       if (player.lives <= 0) gameOver = true;
     }
 
-    // Check if alien reached bottom
     if (alien.y + alien.height >= canvas.height) {
       gameOver = true;
     }
@@ -226,11 +236,20 @@ function updateGame() {
       alienFireCooldown = 30;
     }
   });
+
+  let allDead = aliens.every(alien => !alien.alive);
+
   if (needDirectionChange) alienDirection *= -1;
   if (alienFireCooldown > 0) alienFireCooldown--;
-  if (allDead) {
-    level++;
-    createAliens();
+  if (allDead && !levelTransition) {
+    levelTransition = true;
+    if (level >= maxLevel) {
+      gameOver = true;
+      gameWon = true;
+    } else {
+      level++;
+      createAliens();
+    }
   }
 
   explosions.forEach((ex, i) => {
@@ -254,5 +273,4 @@ function updateGame() {
 updateGame();
 </script>
 </body>
-
 </html>
