@@ -38,6 +38,15 @@ alienImg.src = alienImages[0];
 const explosionImg = new Image();
 explosionImg.src = "explosion_placeholder.png";
 
+// Подгружаем награды
+const rewardImages = [];
+for (let i = 1; i <= 6; i++) {
+  const img = new Image();
+  img.src = `bag${i}.png`;
+  rewardImages.push(img);
+}
+let rewardImg = null;
+
 const player = {
   x: canvas.width / 2 - 25,
   y: canvas.height - 60,
@@ -66,11 +75,8 @@ let gameStarted = false;
 let gameOver = false;
 let gameWon = false;
 let gameOverTimer = 0;
-let bagImg = new Image();
-bagImg.src = "bag.png";
 
 function createAliens() {
-  // Update alien image and background
   const alienImageIndex = (level - 1) % alienImages.length;
   alienImg.src = alienImages[alienImageIndex];
   const backgroundIndex = (level - 1) % 5 + 1;
@@ -148,8 +154,8 @@ function updateGame() {
     if (gameWon) {
       ctx.fillText("YOU WON", canvas.width / 2, canvas.height / 2);
       gameOverTimer++;
-      if (gameOverTimer > 120) {
-        drawImage(bagImg, canvas.width / 2 - 100, canvas.height / 2 + 30, 200, 200);
+      if (gameOverTimer > 120 && rewardImg) {
+        drawImage(rewardImg, canvas.width / 2 - 100, canvas.height / 2 + 30, 200, 200);
       }
     } else {
       ctx.fillText("Game Over! Final Score: " + score, canvas.width / 2, canvas.height / 2);
@@ -206,7 +212,6 @@ function updateGame() {
     if (alien.x <= 0 || alien.x + alien.width >= canvas.width) needDirectionChange = true;
     alien.y += 0.1 + level * 0.03;
 
-    // Check collision with player
     if (!player.invulnerable &&
         alien.x < player.x + player.width &&
         alien.x + alien.width > player.x &&
@@ -218,7 +223,6 @@ function updateGame() {
       if (player.lives <= 0) gameOver = true;
     }
 
-    // Check if alien reached bottom
     if (alien.y + alien.height >= canvas.height) {
       gameOver = true;
     }
@@ -252,15 +256,15 @@ function updateGame() {
   if (needDirectionChange) alienDirection *= -1;
   if (alienFireCooldown > 0) alienFireCooldown--;
   if (allDead) {
-  if (level === maxLevel) {
-    gameOver = true;
-    gameWon = true;
-  } else {
-    level++;
-    createAliens();
+    if (level === maxLevel) {
+      gameOver = true;
+      gameWon = true;
+      rewardImg = rewardImages[Math.floor(Math.random() * rewardImages.length)];
+    } else {
+      level++;
+      createAliens();
+    }
   }
-}
-
 
   explosions.forEach((ex, i) => {
     drawImage(explosionImg, ex.x, ex.y, 40, 40);
@@ -283,8 +287,8 @@ function updateGame() {
 updateGame();
 </script>
 </body>
-
 </html>
+
 
 
 
