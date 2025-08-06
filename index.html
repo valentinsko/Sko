@@ -1,4 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Space Invaders - Pastel Edition</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<audio id="bgMusic" src="music_placeholder.mp3" loop></audio>
+<audio id="explodeSound" src="explode_placeholder.mp3"></audio>
 
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+canvas.width = 800;
+canvas.height = 600;
+
+const playerImg = new Image();
+playerImg.src = "prada_logo_gold.png";
+const alienImages = [
+  "chanel_logo_black.png",
+  "chanel_logo_blue.png",
+  "chanel_logo_purple.png",
+  "chanel_logo_silver.png",
+  "chanel_logo_gold.png"
+];
+let alienImg = new Image();
+alienImg.src = alienImages[0];
+const explosionImg = new Image();
+explosionImg.src = "explosion_placeholder.png";
+
+const player = {
+  x: canvas.width / 2 - 25,
+  y: canvas.height - 60,
+  width: 50,
+  height: 40,
+  speed: 5,
+  lives: 3,
+  invulnerable: false,
+  invulnTime: 0
+};
+
+let bullets = [];
+let alienBullets = [];
+let aliens = [];
+let explosions = [];
+const alienRows = 4;
+const alienCols = 8;
+const alienSpacing = 70;
+const alienSize = 40;
+let score = 0;
+const maxLevel = 2;
+let level = 1;
+let alienFireCooldown = 0;
 let alienDirection = 1;
 let gameStarted = false;
 let gameOver = false;
@@ -223,4 +285,5 @@ updateGame();
 </body>
 
 </html>
+
 
