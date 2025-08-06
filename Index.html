@@ -260,24 +260,8 @@ function updateGame() {
     level++;
     createAliens();
   }
-} else {
-    level++;
-    createAliens();
-  }
-} else {
-      level++;
-      createAliens();
-    }
-  } else {
-      level++;
-      createAliens();
-    }
-      gameOver = true;
-      gameWon = true;
-    } else {
-      createAliens();
-    }
-  }
+}
+
 
   explosions.forEach((ex, i) => {
     drawImage(explosionImg, ex.x, ex.y, 40, 40);
