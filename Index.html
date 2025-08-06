@@ -58,7 +58,7 @@ const alienCols = 8;
 const alienSpacing = 70;
 const alienSize = 40;
 let score = 0;
-const maxLevel = 3;
+const maxLevel = 10;
 let level = 1;
 let alienFireCooldown = 0;
 let alienDirection = 1;
@@ -251,8 +251,13 @@ function updateGame() {
   if (needDirectionChange) alienDirection *= -1;
   if (alienFireCooldown > 0) alienFireCooldown--;
   if (allDead) {
-    level++;
-    if (level > maxLevel) {
+    if (level === maxLevel) {
+      gameOver = true;
+      gameWon = true;
+    } else {
+      level++;
+      createAliens();
+    }
       gameOver = true;
       gameWon = true;
     } else {
