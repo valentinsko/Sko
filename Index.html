@@ -70,7 +70,6 @@ let bagImg = new Image();
 bagImg.src = "bag.png";
 
 function createAliens() {
-  // Update alien image and background
   const alienImageIndex = (level - 1) % alienImages.length;
   alienImg.src = alienImages[alienImageIndex];
   const backgroundIndex = (level - 1) % 5 + 1;
@@ -196,17 +195,14 @@ function updateGame() {
     if (b.y > canvas.height) alienBullets.splice(i, 1);
   });
 
-  let allDead = true;
   let needDirectionChange = false;
   aliens.forEach((alien, i) => {
     if (!alien.alive) return;
-    allDead = false;
 
     alien.x += alienDirection * (0.4 + level * 0.6);
     if (alien.x <= 0 || alien.x + alien.width >= canvas.width) needDirectionChange = true;
     alien.y += 0.1 + level * 0.03;
 
-    // Check collision with player
     if (!player.invulnerable &&
         alien.x < player.x + player.width &&
         alien.x + alien.width > player.x &&
@@ -218,7 +214,6 @@ function updateGame() {
       if (player.lives <= 0) gameOver = true;
     }
 
-    // Check if alien reached bottom
     if (alien.y + alien.height >= canvas.height) {
       gameOver = true;
     }
@@ -249,18 +244,20 @@ function updateGame() {
       alienFireCooldown = 30;
     }
   });
+
+  let allDead = aliens.every(alien => !alien.alive);
+
   if (needDirectionChange) alienDirection *= -1;
   if (alienFireCooldown > 0) alienFireCooldown--;
   if (allDead) {
-  if (level === maxLevel) {
-    gameOver = true;
-    gameWon = true;
-  } else {
-    level++;
-    createAliens();
+    if (level === maxLevel) {
+      gameOver = true;
+      gameWon = true;
+    } else {
+      level++;
+      createAliens();
+    }
   }
-}
-
 
   explosions.forEach((ex, i) => {
     drawImage(explosionImg, ex.x, ex.y, 40, 40);
@@ -285,5 +282,3 @@ updateGame();
 </body>
 
 </html>
-
-
