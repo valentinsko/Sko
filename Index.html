@@ -10,8 +10,6 @@
     }
     canvas {
       display: block;
-      background: url('background.jpg') no-repeat center center;
-      background-size: cover;
     }
   </style>
 </head>
@@ -28,30 +26,23 @@ canvas.height = 600;
 
 const playerImg = new Image();
 playerImg.src = "prada_logo_gold.png";
-const alienImg = new Image();
-alienImg.src = "chanel_logo_black.png";
+const alienImages = [
+  "chanel_logo_black.png",
+  "chanel_logo_blue.png",
+  "chanel_logo_purple.png",
+  "chanel_logo_silver.png",
+  "chanel_logo_gold.png"
+];
+let alienImg = new Image();
+alienImg.src = alienImages[0];
 const explosionImg = new Image();
 explosionImg.src = "explosion_placeholder.png";
-
-const images = [playerImg, alienImg, explosionImg];
-let imagesLoaded = 0;
-images.forEach(img => {
-  img.onload = () => {
-    imagesLoaded++;
-    if (imagesLoaded === images.length) {
-      updateGame();
-    }
-  };
-  img.onerror = () => {
-    console.error("Failed to load image:", img.src);
-  };
-});
 
 const player = {
   x: canvas.width / 2 - 25,
   y: canvas.height - 60,
   width: 50,
-  height: 20,
+  height: 40,
   speed: 5,
   lives: 3,
   invulnerable: false,
@@ -72,9 +63,19 @@ let alienFireCooldown = 0;
 let alienDirection = 1;
 let gameStarted = false;
 let gameOver = false;
+let gameWon = false;
 let gameOverTimer = 0;
+let bagImg = new Image();
+bagImg.src = "bag.png";
 
 function createAliens() {
+  // Update alien image and background
+  const alienImageIndex = (level - 1) % alienImages.length;
+  alienImg.src = alienImages[alienImageIndex];
+  const backgroundIndex = (level - 1) % 5 + 1;
+  canvas.style.background = `url('background${backgroundIndex}.jpg') no-repeat center center`;
+  canvas.style.backgroundSize = 'cover';
+
   aliens = [];
   for (let row = 0; row < alienRows; row++) {
     for (let col = 0; col < alienCols; col++) {
@@ -94,9 +95,17 @@ const keys = {};
 document.addEventListener("keydown", e => keys[e.key] = true);
 document.addEventListener("keyup", e => keys[e.key] = false);
 document.addEventListener("keydown", e => {
+  if (gameOver && !gameWon && e.key === " ") {
+    document.location.reload();
+    return;
+  }
   if (!gameStarted) {
     gameStarted = true;
     const bgMusic = document.getElementById("bgMusic");
+    if (!bgMusic.paused) {
+      bgMusic.pause();
+      bgMusic.currentTime = 0;
+    }
     bgMusic.play().catch(err => {
       console.log("Autoplay blocked:", err);
     });
@@ -113,10 +122,8 @@ document.addEventListener("keydown", e => {
   }
 });
 
-function drawImageSafe(img, x, y, w, h) {
-  if (img.complete && img.naturalWidth !== 0) {
-    ctx.drawImage(img, x, y, w, h);
-  }
+function drawImage(img, x, y, w, h) {
+  ctx.drawImage(img, x, y, w, h);
 }
 
 function updateGame() {
@@ -131,19 +138,22 @@ function updateGame() {
   }
 
   if (gameOver) {
-    ctx.fillStyle = "red";
-    ctx.font = "48px Arial";
+    ctx.fillStyle = "black";
+    ctx.font = "36px Arial";
     ctx.textAlign = "center";
-    ctx.fillText("YOU LOSE", canvas.width / 2, canvas.height / 2);
-    ctx.font = "24px Arial";
-    ctx.fillText("Final Score: " + score, canvas.width / 2, canvas.height / 2 + 40);
-    gameOverTimer++;
-    if (gameOverTimer > 180) {
-      document.location.reload();
+    if (gameWon) {
+      ctx.fillText("YOU WON", canvas.width / 2, canvas.height / 2);
+      gameOverTimer++;
+      if (gameOverTimer > 120) {
+        drawImage(bagImg, canvas.width / 2 - 100, canvas.height / 2 + 30, 200, 200);
+      }
     } else {
-      requestAnimationFrame(updateGame);
+      ctx.fillText("Game Over! Final Score: " + score, canvas.width / 2, canvas.height / 2);
+      ctx.font = "24px Arial";
+      ctx.fillText("Press SPACE to restart", canvas.width / 2, canvas.height / 2 + 40);
     }
-    return;
+    return requestAnimationFrame(updateGame);
+  }
   }
 
   if (keys["ArrowLeft"] && player.x > 0) player.x -= player.speed;
@@ -151,9 +161,9 @@ function updateGame() {
 
   if (player.invulnTime > 0) {
     player.invulnTime--;
-    if (player.invulnTime % 10 < 5) drawImageSafe(playerImg, player.x, player.y, player.width, player.height);
+    if (player.invulnTime % 10 < 5) drawImage(playerImg, player.x, player.y, player.width, player.height);
   } else {
-    drawImageSafe(playerImg, player.x, player.y, player.width, player.height);
+    drawImage(playerImg, player.x, player.y, player.width, player.height);
     player.invulnerable = false;
   }
 
@@ -187,31 +197,30 @@ function updateGame() {
   aliens.forEach((alien, i) => {
     if (!alien.alive) return;
     allDead = false;
-    alien.x += alienDirection * (0.4 + level * 0.3);
+
+    alien.x += alienDirection * (0.4 + level * 0.6);
     if (alien.x <= 0 || alien.x + alien.width >= canvas.width) needDirectionChange = true;
     alien.y += 0.1 + level * 0.03;
 
-    if (
-      alien.y + alien.height >= player.y ||
-      (!player.invulnerable &&
+    // Check collision with player
+    if (!player.invulnerable &&
         alien.x < player.x + player.width &&
         alien.x + alien.width > player.x &&
         alien.y < player.y + player.height &&
-        alien.y + alien.height > player.y)
-    ) {
-      if (!player.invulnerable) {
-        player.lives--;
-        player.invulnerable = true;
-        player.invulnTime = 60;
-        if (player.lives <= 0) gameOver = true;
-      }
+        alien.y + alien.height > player.y) {
+      player.lives--;
+      player.invulnerable = true;
+      player.invulnTime = 60;
+      if (player.lives <= 0) gameOver = true;
     }
 
+    // Check if alien reached bottom
     if (alien.y + alien.height >= canvas.height) {
       gameOver = true;
     }
 
-    drawImageSafe(alienImg, alien.x, alien.y, alien.width, alien.height);
+    drawImage(alienImg, alien.x, alien.y, alien.width, alien.height);
+
     bullets.forEach((b, j) => {
       if (
         b.x < alien.x + alien.width && b.x + b.width > alien.x &&
@@ -224,6 +233,7 @@ function updateGame() {
         score += 10;
       }
     });
+
     if (Math.random() < 0.001 * level && alienFireCooldown <= 0) {
       alienBullets.push({
         x: alien.x + alien.width / 2 - 2.5,
@@ -239,11 +249,16 @@ function updateGame() {
   if (alienFireCooldown > 0) alienFireCooldown--;
   if (allDead) {
     level++;
-    createAliens();
+    if (level > 10) {
+      gameOver = true;
+      gameWon = true;
+    } else {
+      createAliens();
+    }
   }
 
   explosions.forEach((ex, i) => {
-    drawImageSafe(explosionImg, ex.x, ex.y, 40, 40);
+    drawImage(explosionImg, ex.x, ex.y, 40, 40);
     ex.frame++;
     if (ex.frame > 10) explosions.splice(i, 1);
   });
@@ -254,11 +269,14 @@ function updateGame() {
   ctx.fillText("Score: " + score + " | Level: " + level, 10, 30);
 
   for (let i = 0; i < player.lives; i++) {
-    drawImageSafe(playerImg, 700 + i * 30, 10, 20, 10);
+    drawImage(playerImg, 700 + i * 30, 10, 20, 10);
   }
 
   requestAnimationFrame(updateGame);
 }
+
+updateGame();
 </script>
 </body>
+
 </html>
