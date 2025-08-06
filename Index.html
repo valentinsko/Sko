@@ -159,7 +159,6 @@ function updateGame() {
     requestAnimationFrame(updateGame);
     return;
   }
-  }
 
   if (keys["ArrowLeft"] && player.x > 0) player.x -= player.speed;
   if (keys["ArrowRight"] && player.x + player.width < canvas.width) player.x += player.speed;
@@ -286,4 +285,5 @@ updateGame();
 </body>
 
 </html>
+
 
