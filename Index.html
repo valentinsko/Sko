@@ -58,7 +58,7 @@ const alienCols = 8;
 const alienSpacing = 70;
 const alienSize = 40;
 let score = 0;
-const maxLevel = 2;
+const maxLevel = 10;
 let level = 1;
 let alienFireCooldown = 0;
 let alienDirection = 1;
@@ -137,6 +137,7 @@ function updateGame() {
     ctx.fillText("Press Any Key to Start", canvas.width / 2, canvas.height / 2);
     ctx.font = "24px Arial";
     ctx.fillText("SPACE / UP to FIRE", canvas.width / 2, canvas.height / 2 + 40);
+    ctx.fillText("← / → to MOVE", canvas.width / 2, canvas.height / 2 + 70);
     return requestAnimationFrame(updateGame);
   }
 
@@ -155,7 +156,8 @@ function updateGame() {
       ctx.font = "24px Arial";
       ctx.fillText("Press SPACE to restart", canvas.width / 2, canvas.height / 2 + 40);
     }
-    return requestAnimationFrame(updateGame);
+    requestAnimationFrame(updateGame);
+    return;
   }
   }
 
@@ -251,10 +253,18 @@ function updateGame() {
   if (needDirectionChange) alienDirection *= -1;
   if (alienFireCooldown > 0) alienFireCooldown--;
   if (allDead) {
-    if (level === maxLevel) {
-      gameOver = true;
-      gameWon = true;
-    } else {
+  if (level === maxLevel) {
+    gameOver = true;
+    gameWon = true;
+  } else {
+    level++;
+    createAliens();
+  }
+} else {
+      level++;
+      createAliens();
+    }
+  } else {
       level++;
       createAliens();
     }
@@ -288,4 +298,3 @@ updateGame();
 </body>
 
 </html>
-
