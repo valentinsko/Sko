@@ -102,21 +102,7 @@ document.addEventListener("keydown", e => {
     return;
   }
   if (!gameStarted) {
-    gameStarted = true;
-    const bgMusic = document.getElementById("bgMusic");
-    if (!bgMusic.paused) {
-      bgMusic.pause();
-      bgMusic.currentTime = 0;
-    }
-    bgMusic.play().catch(err => {
-      console.log("Autoplay blocked:", err);
-    });
-    return;
-  }
-});
-
-function updateGame() {
-  if (!gameStarted) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "black";
     ctx.font = "36px Arial";
     ctx.textAlign = "center";
