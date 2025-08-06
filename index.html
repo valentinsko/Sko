@@ -162,10 +162,30 @@ function updateGame() {
   aliens.forEach((alien, i) => {
     if (!alien.alive) return;
     allDead = false;
+
     alien.x += alienDirection * (0.4 + level * 0.3);
     if (alien.x <= 0 || alien.x + alien.width >= canvas.width) needDirectionChange = true;
     alien.y += 0.1 + level * 0.03;
+
+    // Check collision with player
+    if (!player.invulnerable &&
+        alien.x < player.x + player.width &&
+        alien.x + alien.width > player.x &&
+        alien.y < player.y + player.height &&
+        alien.y + alien.height > player.y) {
+      player.lives--;
+      player.invulnerable = true;
+      player.invulnTime = 60;
+      if (player.lives <= 0) gameOver = true;
+    }
+
+    // Check if alien reached bottom
+    if (alien.y + alien.height >= canvas.height) {
+      gameOver = true;
+    }
+
     drawImage(alienImg, alien.x, alien.y, alien.width, alien.height);
+
     bullets.forEach((b, j) => {
       if (
         b.x < alien.x + alien.width && b.x + b.width > alien.x &&
@@ -178,6 +198,7 @@ function updateGame() {
         score += 10;
       }
     });
+
     if (Math.random() < 0.001 * level && alienFireCooldown <= 0) {
       alienBullets.push({
         x: alien.x + alien.width / 2 - 2.5,
@@ -219,4 +240,3 @@ updateGame();
 </body>
 
 </html>
-
